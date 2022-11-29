@@ -66,6 +66,12 @@ if [[ -z $TIFLASH_REMOTE ]]; then
     export TIFLASH_REMOTE=git@github.com:pingcap/tiflash.git
 fi
 
+
+if [[ -z $TIFLASH_ORIGIN_NAME ]]; then
+    echo "default tiflash origin name to origin"
+    export TIFLASH_ORIGIN_NAME=origin
+fi 
+
 export PR_TEMPLATE=$TIFLASH/.github/pull_request_template.md
 
 export MAC=0
@@ -101,7 +107,7 @@ if [ $PROXY_PR -eq 0 ]; then
 else
     git commit -s -m"update tiflash proxy to proxy_up/$PROXY_BRANCH for proxy pr $PROXY_PR"
 fi
-git push origin $B
+git push $TIFLASH_ORIGIN_NAME $B
 
 export NEW_TEMPLATE=/tmp/pull_request_template$B.md
 
