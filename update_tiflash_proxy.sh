@@ -15,6 +15,19 @@ set -o xtrace
 # Update raftstore-proxy to master
 # PROXY_BRANCH=raftstore-proxy TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
 
+# Edit Pr of raftstore-proxy to master to fix issue
+# TIFLASH_PR=6222 PROXY_BRANCH=raftstore-proxy TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+
+# Update 5.4
+# FIXED_ISSUE=6131 PROXY_BRANCH=raftstore-proxy-5.4 TIFLASH=~/tics TIFLASH_BRANCH=release-5.4 PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=179 bash ./update_tiflash_proxy.sh
+
+# Update a different branch merge-6.4 to master
+# PROXY_BRANCH=merge-6.4 TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+# Update to hotfix
+# PROXY_BRANCH=raftstore-proxy-5.4 TIFLASH=~/tics TIFLASH_BRANCH=release-5.4-20220531 PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
 
 if [[ -z $PROXY_BRANCH ]]; then
     # raftstore-proxy-x.y
@@ -41,7 +54,7 @@ if [[ -z $PROXY_REMOTE ]]; then
 fi
 
 if [[ -z $PROXY_PR ]]; then
-    echo "proxy pr is not set"
+    echo "proxy pr is not set, you can specify multiple prs splitted by /"
     exit
 fi
 
@@ -83,7 +96,11 @@ git fetch proxy_up $PROXY_BRANCH
 git checkout proxy_up/$PROXY_BRANCH
 popd
 git add contrib/tiflash-proxy
-git commit -s -m"update tiflash proxy to proxy_up/$PROXY_BRANCH for proxy pr $PROXY_PR"
+if [ $PROXY_PR -eq 0 ]; then
+    git commit -s -m"update tiflash proxy to proxy_up/$PROXY_BRANCH"
+else
+    git commit -s -m"update tiflash proxy to proxy_up/$PROXY_BRANCH for proxy pr $PROXY_PR"
+fi
 git push origin $B
 
 export NEW_TEMPLATE=/tmp/pull_request_template$B.md
@@ -102,19 +119,30 @@ export PROB_DESC="Including:\n$SUBMODULE_DIFF"
 export ESCAPED_PROB_DESC=$(printf '%s\n' "$PROB_DESC" | sed -e 's/[]\/$*.^[]/\\&/g')
 export ESCAPED_PROB_DESC=${ESCAPED_PROB_DESC//$'\n'/\\n}
 
-while IFS='/' read -ra S; do
-  for i in "${S[@]}"; do
-    U=https://github.com/pingcap/tidb-engine-ext/pull/$i
-    U=$(printf '%s\n' "$U" | sed -e 's/[]\/$*.^[]/\\&/g')
-    PROXY_PR_URL="$PROXY_PR_URL\n$U"
-  done
-done <<< "$PROXY_PR"
+
+if [ $PROXY_PR -ne 0 ]; then
+    while IFS='/' read -ra S; do
+      for i in "${S[@]}"; do
+        U=https://github.com/pingcap/tidb-engine-ext/pull/$i
+        U=$(printf '%s\n' "$U" | sed -e 's/[]\/$*.^[]/\\&/g')
+        PROXY_PR_URL="$PROXY_PR_URL\n$U"
+      done
+    done <<< "$PROXY_PR"
+fi
 
 sed -i SEDSPACE "s/Summary:/Summary:\n update proxy to $PROXY_BRANCH\n Proxy PR: $PROXY_PR_URL\n $ESCAPED_PROB_DESC/g" $NEW_TEMPLATE
 
 
-if [[ -z $TIFLASH_PR ]]; then
-    gh pr create --title "update proxy of $TIFLASH_BRANCH to $PROXY_BRANCH by proxy pr $PROXY_PR" -F $NEW_TEMPLATE --base $TIFLASH_BRANCH -R $TIFLASH_REMOTE
+if [ $PROXY_PR -ne 0 ]; then
+    export TITLE="update proxy of $TIFLASH_BRANCH to $PROXY_BRANCH by proxy pr $PROXY_PR" 
 else
-    gh pr edit $TIFLASH_PR --title "update proxy of $TIFLASH_BRANCH to $PROXY_BRANCH by proxy pr $PROXY_PR" -F $NEW_TEMPLATE --base $TIFLASH_BRANCH -R $TIFLASH_REMOTE
+    export TITLE="update proxy of $TIFLASH_BRANCH to $PROXY_BRANCH"
+fi
+
+if [[ -z $TIFLASH_PR ]]; then
+    gh pr create --title "$TITLE" -F $NEW_TEMPLATE --base $TIFLASH_BRANCH -R $TIFLASH_REMOTE
+    echo "EDIT THIS PR WITH:"
+    echo "TIFLASH_PR=TODO" "$@"
+else
+    gh pr edit $TIFLASH_PR --title "$TITLE" -F $NEW_TEMPLATE --base $TIFLASH_BRANCH -R $TIFLASH_REMOTE
 fi
