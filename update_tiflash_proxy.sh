@@ -6,6 +6,9 @@ set -o xtrace
 # Update raftstore-proxy-6.2 to master
 # PROXY_BRANCH=raftstore-proxy-6.2 TIFLASH=~/tiflash/tiflash TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
 
+# PROXY_BRANCH=raftstore-proxy-8.1 TIFLASH_BRANCH=release-8.1 TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:calvinneo/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+
 # Update raftstore-proxy-6.2 to master to fix issue
 # FIXED_ISSUE=123 PROXY_BRANCH=raftstore-proxy-6.2 TIFLASH=~/tiflash/tiflash TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
 
@@ -18,6 +21,11 @@ set -o xtrace
 # Edit Pr of raftstore-proxy to master to fix issue
 # TIFLASH_PR=6222 PROXY_BRANCH=raftstore-proxy TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
 
+# Update 6.5
+# PROXY_BRANCH=raftstore-proxy-6.5 TIFLASH=~/tics TIFLASH_BRANCH=release-6.5 PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=289 bash ./update_tiflash_proxy.sh
+
+# 7.1 by raftstore-proxy
+# PROXY_BRANCH=raftstore-proxy TIFLASH=~/tics TIFLASH_BRANCH=release-7.1 PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git bash ./update_tiflash_proxy.sh
 
 # Update 5.4
 # FIXED_ISSUE=6131 PROXY_BRANCH=raftstore-proxy-5.4 TIFLASH=~/tics TIFLASH_BRANCH=release-5.4 PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=179 bash ./update_tiflash_proxy.sh
@@ -27,6 +35,21 @@ set -o xtrace
 
 # Update to hotfix
 # PROXY_BRANCH=raftstore-proxy-5.4 TIFLASH=~/tics TIFLASH_BRANCH=release-5.4-20220531 PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+# Try a local branch
+# PROXY_BRANCH=v2/ps-runtime TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:calvinneo/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+# Try a local branch of multi rocks master
+# PROXY_BRANCH=v2/patch-7.1-for-problems TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:calvinneo/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+# Try a local branch and modify PR
+# TIFLASH_PR=7704 PROXY_BRANCH=use-back-addr-3 TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:calvinneo/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+# TIFLASH_PR=8022 PROXY_BRANCH=raftstore-proxy TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:pingcap/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+# PROXY_BRANCH=merge-tikv-near-7.4 TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:calvinneo/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
+
+# PROXY_BRANCH=upgrade-near-8.2 TIFLASH=~/tics TIFLASH_BRANCH=master PROXY_REMOTE=git@github.com:calvinneo/tidb-engine-ext.git PROXY_PR=0 bash ./update_tiflash_proxy.sh
 
 
 if [[ -z $PROXY_BRANCH ]]; then
@@ -96,7 +119,10 @@ else
     export B=`git rev-parse --abbrev-ref HEAD`
 fi
 
+echo "Branch is", $B
+
 pushd contrib/tiflash-proxy
+git remote remove proxy_up
 git remote add proxy_up $PROXY_REMOTE
 git fetch proxy_up $PROXY_BRANCH
 git checkout proxy_up/$PROXY_BRANCH
